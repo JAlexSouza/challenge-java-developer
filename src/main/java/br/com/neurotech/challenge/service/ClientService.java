@@ -14,11 +14,11 @@ public interface ClientService {
 	 * 
 	 * @return ID do cliente recém-salvo
 	 */
-	ResponseEntity<?> save(ClientDTO client);
+	ResponseEntity<?> save(ClientDTO client) throws Exception;
 	
 	/**
 	 * Recupera um cliente baseado no seu ID
 	 */
-	ResponseEntity<?> get(String id);
+	ResponseEntity<?> get(String id) throws Exception;
 
 }

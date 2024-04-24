@@ -19,7 +19,7 @@ public class ClientController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ClientDTO> get(@PathVariable String id){
+    public ResponseEntity<ClientDTO> get(@PathVariable String id) throws Exception {
         return clientService.get(id);
     }
 }

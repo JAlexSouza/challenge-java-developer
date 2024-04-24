@@ -1,6 +1,7 @@
 package br.com.neurotech.challenge.service;
 
 import br.com.neurotech.challenge.entity.NeurotechClient;
+import br.com.neurotech.challenge.exception.InvalidClientIDException;
 import br.com.neurotech.challenge.model.dto.ClientDTO;
 import br.com.neurotech.challenge.model.mapper.ClientMapper;
 import br.com.neurotech.challenge.repository.ClientRepository;
@@ -15,13 +16,14 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Service
-public class ClientServiceImp implements ClientService{
+public class ClientServiceImp implements ClientService {
 
     private final String URL = "http://localhost:8080/api/client/";
     @Autowired
     private ClientRepository clientRepository;
     @Autowired
     private ClientMapper clientMapper;
+
     @Override
     public ResponseEntity<?> save(ClientDTO clientDTO) {
         NeurotechClient newClient = clientRepository.save(clientMapper.convert(clientDTO));
@@ -33,12 +35,16 @@ public class ClientServiceImp implements ClientService{
     }
 
     @Override
-    public ResponseEntity<ClientDTO> get(String id) {
-        Optional<NeurotechClient> client = clientRepository.findById(Long.parseLong(id));
+    public ResponseEntity<ClientDTO> get(String id) throws Exception {
+        try {
+            Optional<NeurotechClient> client = Optional.ofNullable(clientRepository.findById(Long.parseLong(id)).orElseThrow(() -> new IllegalArgumentException()));
 
-        if (Objects.isNull(client.get()))
-            return new ResponseEntity<ClientDTO>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<ClientDTO>(clientMapper.convert(client.get()), HttpStatus.OK);
 
-        return new ResponseEntity<ClientDTO>(clientMapper.convert(client.get()), HttpStatus.OK);
+        } catch (NumberFormatException ex) {
+            throw new InvalidClientIDException("You must provide a valid type for ID client");
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidClientIDException("You must provide a valid ID client");
+        }
     }
 }
