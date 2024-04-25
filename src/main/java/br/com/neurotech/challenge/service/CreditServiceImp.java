@@ -3,9 +3,8 @@ package br.com.neurotech.challenge.service;
 import br.com.neurotech.challenge.entity.NeurotechClient;
 import br.com.neurotech.challenge.entity.VehicleModel;
 import br.com.neurotech.challenge.exception.InvalidClientIDException;
-import br.com.neurotech.challenge.model.dto.AutoCreditApplicabilityDTO;
-import br.com.neurotech.challenge.model.dto.CreditAnalysisDTO;
-import br.com.neurotech.challenge.model.dto.CreditApplicabilityDTO;
+import br.com.neurotech.challenge.model.dto.*;
+import br.com.neurotech.challenge.model.mapper.ClientMapper;
 import br.com.neurotech.challenge.repository.ClientRepository;
 import br.com.neurotech.challenge.service.model.autocredit.AutoCreditAnalysis;
 import br.com.neurotech.challenge.service.model.autocredit.HatchAutoCreditAnalysis;
@@ -17,14 +16,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class CreditServiceImp implements CreditService {
 
     @Autowired
     private ClientRepository clientRepository;
+
+    @Autowired
+    private ClientMapper clientMapper;
 
     @Override
     public ResponseEntity<AutoCreditApplicabilityDTO> checkCredit(String clientId, VehicleModel model) throws Exception {
@@ -71,5 +73,43 @@ public class CreditServiceImp implements CreditService {
         } catch (IllegalArgumentException ex) {
             throw new InvalidClientIDException("You must provide a valid ID client");
         }
+    }
+
+    public ResponseEntity<List<CustomCreditAnalysisDTO>> customCreditAnalysis(){
+        List<NeurotechClient> clients = clientRepository.findAgeGroup();
+
+        List<CustomCreditAnalysisDTO> customCreditAnalysisDTO = clients.stream()
+                                                            .map(clientMapper::convertToCustomCreditAnalysisDTO)
+                                                            .collect(Collectors.toList());
+
+        // Chain of Responsibility Pattern implementation
+        CreditAnalysis creditAnalysis = new InterestFixedCreditAnalysis(new NoCreditAnalysis());
+        AutoCreditAnalysis autoCreditAnalysis = new HatchAutoCreditAnalysis(new NoAutoCreditAnalysis());
+
+        // Credit Analysis
+        for (CustomCreditAnalysisDTO client : customCreditAnalysisDTO ) {
+            List<CreditApplicabilityDTO> creditApplicabilityDTOList = new ArrayList<>();
+
+            CreditAnalysisDTO creditAnalysisDTO = CreditAnalysisDTO.builder()
+                                                        .credits(creditApplicabilityDTOList)
+                                                        .build();
+
+            creditAnalysis.checkApplicability(clientMapper.convert(client), creditAnalysisDTO);
+
+            AutoCreditApplicabilityDTO autoCreditApplicabilityDTO = autoCreditAnalysis.checkEligible(clientMapper.convert(client), VehicleModel.HATCH);
+
+            client.setCredit(creditAnalysisDTO.getCredits().get(0));
+            client.setAutoCredit(autoCreditApplicabilityDTO);
+        }
+
+        customCreditAnalysisDTO = customCreditAnalysisDTO.stream()
+                .filter(client -> client.getCredit().getEligible())
+                .filter(client -> client.getAutoCredit().getEligible())
+                .collect(Collectors.toList());
+
+        if(customCreditAnalysisDTO.isEmpty())
+            return new ResponseEntity<List<CustomCreditAnalysisDTO>>(customCreditAnalysisDTO, HttpStatus.NO_CONTENT);
+
+        return new ResponseEntity<List<CustomCreditAnalysisDTO>>(customCreditAnalysisDTO, HttpStatus.OK);
     }
 }
