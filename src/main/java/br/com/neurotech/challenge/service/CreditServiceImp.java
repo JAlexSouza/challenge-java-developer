@@ -2,6 +2,7 @@ package br.com.neurotech.challenge.service;
 
 import br.com.neurotech.challenge.entity.NeurotechClient;
 import br.com.neurotech.challenge.entity.VehicleModel;
+import br.com.neurotech.challenge.exception.ClientNotFoundException;
 import br.com.neurotech.challenge.exception.InvalidClientIDException;
 import br.com.neurotech.challenge.model.dto.*;
 import br.com.neurotech.challenge.model.mapper.ClientMapper;
@@ -45,10 +46,11 @@ public class CreditServiceImp implements CreditService {
         } catch (NumberFormatException ex) {
             throw new InvalidClientIDException("You must provide a valid type for ID client");
         } catch (IllegalArgumentException ex) {
-            throw new InvalidClientIDException("You must provide a valid ID client");
+            throw new ClientNotFoundException("You must provide a valid ID client");
         }
     }
 
+    @Override
     public ResponseEntity<CreditAnalysisDTO> creditAnalysis(String id) throws Exception {
         try {
             Optional<NeurotechClient> client = Optional.ofNullable(clientRepository.findById(Long.parseLong(id)).orElseThrow(() -> new IllegalArgumentException()));
@@ -75,6 +77,7 @@ public class CreditServiceImp implements CreditService {
         }
     }
 
+    @Override
     public ResponseEntity<List<CustomCreditAnalysisDTO>> customCreditAnalysis(){
         List<NeurotechClient> clients = clientRepository.findAgeGroup();
 
