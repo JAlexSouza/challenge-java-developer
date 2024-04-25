@@ -1,6 +1,7 @@
 package br.com.neurotech.challenge.service;
 
 import br.com.neurotech.challenge.entity.NeurotechClient;
+import br.com.neurotech.challenge.exception.ClientNotFoundException;
 import br.com.neurotech.challenge.exception.InvalidClientIDException;
 import br.com.neurotech.challenge.model.dto.ClientDTO;
 import br.com.neurotech.challenge.model.mapper.ClientMapper;
@@ -44,7 +45,7 @@ public class ClientServiceImp implements ClientService {
         } catch (NumberFormatException ex) {
             throw new InvalidClientIDException("You must provide a valid type for ID client");
         } catch (IllegalArgumentException ex) {
-            throw new InvalidClientIDException("You must provide a valid ID client");
+            throw new ClientNotFoundException("You must provide a valid ID client");
         }
     }
 }
