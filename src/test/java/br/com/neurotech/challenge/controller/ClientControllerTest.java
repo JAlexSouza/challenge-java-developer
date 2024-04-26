@@ -25,6 +25,7 @@ public class ClientControllerTest {
 
     private final String URL = "/api/client";
     private final String PATH_NEW_CLIENT = "src/test/java/br/com/neurotech/challenge/json/new-client.json";
+    private final String PATH_CLIENT_WITH_INVALID_FIELD = "src/test/java/br/com/neurotech/challenge/json/client-with-invalid-field.json";
 
     @Autowired
     private MockMvc mockMvc;
@@ -79,6 +80,22 @@ public class ClientControllerTest {
         this.mockMvc
                 .perform(MockMvcRequestBuilders
                         .get(new URI(URL + "/a")))
+                .andExpect(MockMvcResultMatchers
+                        .status()
+                        .is(400));
+
+    }
+
+    @Test
+    @DisplayName("Test 05 - Should return an error when an invalid client field is given.")
+    void shouldReturnAnErrorWhenAnInvalidClientFieldIsGiven() throws Exception {
+        String client = Files.readString(Paths.get(PATH_CLIENT_WITH_INVALID_FIELD));
+
+        this.mockMvc
+                .perform(MockMvcRequestBuilders
+                        .post(new URI(URL))
+                        .content(client)
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers
                         .status()
                         .is(400));

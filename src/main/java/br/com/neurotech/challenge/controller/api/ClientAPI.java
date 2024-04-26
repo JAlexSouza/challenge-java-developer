@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,10 +21,14 @@ public interface ClientAPI {
 
     @Operation(summary = "Create a new Client")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Client created with successfully")
+            @ApiResponse(responseCode = "201", description = "Client created with successfully"),
+            @ApiResponse(responseCode = "400",
+                    description = "Invalid field(s).",
+                    content = { @Content(schema = @Schema(implementation = ErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE )}
+            )
     })
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> save(@RequestBody ClientDTO clientDTO);
+    public ResponseEntity<?> save(@Valid @RequestBody ClientDTO clientDTO);
 
     @Operation(summary = "Consulting of client information by ID")
     @ApiResponses({

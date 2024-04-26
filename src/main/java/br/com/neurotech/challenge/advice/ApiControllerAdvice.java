@@ -6,11 +6,15 @@ import br.com.neurotech.challenge.exception.InvalidClientIDException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.Calendar;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class ApiControllerAdvice {
@@ -47,6 +51,20 @@ public class ApiControllerAdvice {
                 .status(400)
                 .error("Bad Request")
                 .message("You must provide a valid argument type.")
+                .path(request.getRequestURI())
+                .build(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> methodArgumentNotValidException(HttpServletRequest request, MethodArgumentNotValidException ex) {
+
+        List<FieldError> fieldError = ex.getBindingResult().getFieldErrors();
+
+        return new ResponseEntity<ErrorResponse>(ErrorResponse.builder()
+                .timestamp(Calendar.getInstance())
+                .status(400)
+                .error("Bad Request")
+                .message("You must provide valid arguments. Invalid field(s): " + fieldError.stream().map(err ->  err.getField()).collect(Collectors.toList()))
                 .path(request.getRequestURI())
                 .build(), HttpStatus.BAD_REQUEST);
     }
