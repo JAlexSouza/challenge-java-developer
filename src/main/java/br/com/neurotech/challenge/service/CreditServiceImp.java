@@ -73,7 +73,7 @@ public class CreditServiceImp implements CreditService {
         } catch (NumberFormatException ex) {
             throw new InvalidClientIDException("You must provide a valid type for ID client");
         } catch (IllegalArgumentException ex) {
-            throw new InvalidClientIDException("You must provide a valid ID client");
+            throw new ClientNotFoundException("You must provide a valid ID client");
         }
     }
 
